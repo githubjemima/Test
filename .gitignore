@@ -29,7 +29,7 @@ log using "\\ad.ucl.ac.uk\homes\rmjljes\DesktopSettings\Desktop\IEHC0080\Practic
 Before we start regression, we need to examine our variables.	
 It’s often helpful to look at a few rows of the variables, to get an idea what we’re dealing with. */
 *To get more information on the variables, type/run the command:
-codebook sy
+codebook sysval bmival
 /*What do you notice about the observations? Are any missing (will be coded as a dot “.”)? 
 Do any ranges of values look improbable/impossible for the variables? 
 For example, would you expect to see a negative systolic blood pressure?	*/
@@ -125,7 +125,7 @@ pnorm r
 *Do the residuals deviates from the symmetry line substantially? If so, which portion of them look problematic? 
 *Answer: __________
 *Answer: They don't deviate from the symmetry line substantially.
-
+edit test
 qnorm r
 * Same as pnorm, do the residuals deviates from the symmetry line substantially? If so, which portion of them look problematic?
 *Answer: __________
