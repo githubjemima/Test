@@ -1,39 +1,152 @@
-# History files
-.Rhistory
-.Rapp.history
+/*Session 7 Practicum: Using HSE2002 Teaching dataset
+This practicum will 
+(1)	assess variables for use in linear regression
+(2)	perform linear regression, and
+(3)	test the assumptions for the linear regression model used
+For this session, we will use systolic blood pressure and bmi. */
 
-# Session Data files
-.RData
+********************************************************************************
+***** 	Step 1: copy the entire document into a Stata do file, you type/run to open one:
+doedit 
+*Now save this do file using the “save” icon in the menu bar of the do file, as “practical7.do”
 
-# User-specific files
-.Ruserdata
+********************************************************************************
+***** 	Step 2: open and save a log file of the outputs, type/run this:
+log using "\\ad.ucl.ac.uk\homes\rmjljes\DesktopSettings\Desktop\IEHC0080\Practical 7.log"
+********************************************************************************
+***** 	Step 3: data cleaning and descriptive analysis
+/* We will do a complete case analysis to assess the association of bmi (the exposure / independent variable) on systolic blood pressure (the outcome / dependent variable).
+1)	Question: what are your hypotheses?
 
-# Example code in package build process
-*-Ex.R
+/*Answer: Hnull: __________________*/
 
-# Output files from R CMD build
-/*.tar.gz
+/*Answer: Hnull: There is no association between BMI and systolic blood pressure*/
 
-# Output files from R CMD check
-/*.Rcheck/
+/*Answer: Halt: __________________*/
 
-# RStudio files
-.Rproj.user/
+/*Answer: Halt: There is an association between BMI and systolic blood presure*/
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+Before we start regression, we need to examine our variables.	
+It’s often helpful to look at a few rows of the variables, to get an idea what we’re dealing with. */
+*To get more information on the variables, type/run the command:
+codebook sy
+/*What do you notice about the observations? Are any missing (will be coded as a dot “.”)? 
+Do any ranges of values look improbable/impossible for the variables? 
+For example, would you expect to see a negative systolic blood pressure?	*/
 
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
+*None are missing but there are negative values for both sysval and bmival
 
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
 
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
+* Let’s look at sysval, our outcome / dependent variable. 
+*First, see how its values are distributed with a histogram
+hist sysval
+/*What do you notice about the range of sysval values?
+*Most are clustered together but there is a peak around zero.
 
-# R Environment Variables
-.Renviron
+Do you expect to see negative systolic blood pressure values? Let’s investigate further. Type or run:*/
+tab sysval, nolabel
+*The tabulate command is normally used for categorical variables. 
+*We used it here to see explicitly if there are non-sensical values in the numerical variable sysval, and if so, how many. 
+/*We find that several values for systolic blood pressure are not actually blood pressure readings. (don’t know== -8; refused/not obtained== -7; schedule not applicable== -2; item not applicable== -1)
+For the purposes of today, we will treat these values as missing. Recode these values to missing: */
+recode sysval -8 -7 -2 -1 = .
+*Now look again at the histogram of sysval after we’ve recoded those values
+hist sysval
+summarize sysval
+*2.How would you describe the distribution now?
+/*Answer: __________________*/
+/*Answer: It is slightly positively skewed*/
+
+/*Secondly, let’s look at bmi, the predictor / independent variable for one of our models.
+Look at the histogram, type/run: */
+hist bmival
+/*Looking at the distribution of bmi, we want to recode -1 values to missing*/ 
+recode bmival -1 = .
+
+/* Now we’ve finished cleaning and inspecting the variables we plan to use in our linear regression models, and prepared them for use in our analyses. */
+
+ 
+********************************************************************************
+***** 	Step 4: run a linear model
+*First, eye-ball the relationship between sysval and ethnici is linear:
+scatter sysval bmi
+*If it’s broadly linear, we can go on with regression, since we will check this more formally later (in step 4.
+
+/*In Stata, the dependent/outcome variable is listed first, followed by one or more independent/exposure variables.
+The syntax of linear regression is:
+regress <outcome variable>  <predictor1> <predictor2>
+So to run a linear regression between systolic blood pressure and bmi, type/run:*/
+regress sysval bmi
+*Look at the Stata output for the regression model.
+/* MORE QUESTIONS: 
+2)	Is BMI related to systolic blood pressure in the sample? If yes, how (ie, when BMI increases by one unit, what happens to sysBP?
+/*Answer: __________________
+/*Answer: Yes, BMI is related to systolic blood pressure. The coefficient for BMI is 1.391816 so for every 1 unit increase in BMI a 1.391816 unit increase in systolic blood pressure is expected.
+
+3)	Is the coefficient beta for bmi statistically significant? How did you conclude this (what statistic value do you check)?
+Answer: __________________
+Answer: Yes, the coefficient beta for bmi is statistically significant because  p value <0.0001
+
+
+4)	Do you have good reason to reject the Null hypothesis?  
+Answer: __________________
+Answer: Yes.
+
+5)	Explain your answer in question 4 in a statement about the relationship between sysBP and bmi:
+Answer: __________________
+Answer: BMI is related to systolic blood pressure. As BMI increases, systolic blood pressure increases.
+
+6)	 How much of the variability in systolic blood pressure (the dependent variable) is explained by bmi (the independent variable)?
+Answer: __________________
+Answer:  R-squared     =  0.1743 so the total amount of variance in the outcome accounted for by the model is 17.43% 
+
+*Write an interpretation of these results:
+__________________________________________________________________________________
+__________________________________________________________________________________
+__________________________________________________________________________________
+
+The R value is the coefficient of determination. It represents total correlation between all predictors and the outcome. 
+The R squared value is the total amount of variance in the outcome accounted for by the model.
+********************************************************************************
+***** 	Step 5: checking model assumptions
+
+/* Firstly, check the normality of the residuals using a normality plot of the residuals against a normal central line. 
+Start by using “predict” command creates the residuals for us*/
+predict r, residual
+*Then we can check the normality of the residuals by comparing them to a standard normal distribution curve. Type/run:
+kdensity r, normal
+*Does the distribution of residuals look broadly normal? If there is any skew, which direction is it, positive or negative?
+*Answer: __________
+*Answer: Yes, it looks broadly normally. It is slihly positively skewed
+
+
+/*We then run two more graphs, the pnorm command graphs a standardized normal probability (P-P) plot while qnorm plots the quantiles of a variable against the quantiles of a normal distribution. pnorm is sensitive to non-normality in the middle range of data and qnorm is sensitive to non-normality near the tails.*/
+pnorm r
+*Do the residuals deviates from the symmetry line substantially? If so, which portion of them look problematic? 
+*Answer: __________
+*Answer: They don't deviate from the symmetry line substantially.
+
+qnorm r
+* Same as pnorm, do the residuals deviates from the symmetry line substantially? If so, which portion of them look problematic?
+*Answer: __________
+*Answer: The higher values deviate from the symmetry line; they lie above it.
+
+*We also need to check for outliers and observations that are unusually influential to the model fit. 
+To produce the leverage-versus-residual-squared plot which also identifies any outliers by attaching observation ID we can examine the data closely, type/run:
+lvr2plot, mlabel(pserial)
+* Does the plot identify any influential outliers? If so, what do you think we should do with them? (hint, are they likely to be coding errors or valid values? If valid values, should we exclude them?) 
+*Answer: __________
+
+*Secondly, check Homoscedasticity of Residuals
+This is for the assumption that residuals be constant in a well-fitted model, ie there shouldn’t be a discernible “pattern” with a predictor. 
+
+We can check this graphically using the rvfplot command (yline(0) option adds a reference line at y=0 so we can more easily judge any visible patterns */
+rvfplot, yline(0)
+*Can you see any patterns in the scatter plot of residuals around the line at Y=0? Do they pinch in the middle or fan out at either extreme?
+*Answer: __________
+
+/*we can see how the residual are distributed about the predictor variable bmi in a scatterplot
+This should look exactly the same as rvfplot above, why? Because we only have 1 predictor in the model. In multivariate models you will need to check the residuals against each predictor one by one
+scatter r bmi
+
+/*Unfortunately, our model is not very good as it doesn’t pass most of the post-estimation tests*/
